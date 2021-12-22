@@ -6,7 +6,7 @@ const thoughtController = {
     getAllThoughts(req, res) {
       Thought.find({})
         .populate({
-          path: 'user',
+          path: 'reactions',
           select: '-__v'
         })
         .select('-__v')
@@ -22,7 +22,7 @@ const thoughtController = {
       //GET a single thought by its _id 
       Thought.findOne({ _id: params.id })
         .populate({
-          path: 'user',
+          path: 'reactions',
           select: '-__v'
         })
         .select('-__v')
@@ -39,6 +39,26 @@ const thoughtController = {
           res.status(400).json(err);
         });
     },
+
+    addThought({ body }, res) {
+        Thought.create(body)
+        .then(dbThoughtData => {
+            User.findOneAndUpdate(
+                { _id: body.userId },
+                { $push: { thoughts: dbThoughtData._id } },
+                { new: true }
+            )
+            .then(dbUserData => {
+                if (!dbUserData) {
+                    res.status(404).json({ message: 'User not found'})
+                }
+                res.json(dbUserData);
+            })
+            .catch(err => res.json(err));
+        })
+        .catch(err => res.status(400).json(err));
+    }
+
   
  
 }
