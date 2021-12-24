@@ -41,6 +41,7 @@ const thoughtController = {
     },
 
     addThought({ body }, res) {
+      //POST to create a new thought (don't forget to push the created thought's _id to the associated user's thoughts array field)
         Thought.create(body)
         .then(dbThoughtData => {
             User.findOneAndUpdate(
@@ -60,6 +61,7 @@ const thoughtController = {
     },
 
     updateThought({ params, body }, res) {
+      //PUT to update a thought by its _id
       Thought.findOneAndUpdate(
           { _id: params.id },
           body,
@@ -75,7 +77,26 @@ const thoughtController = {
       .catch(err => res.status(400).json(err));
   },
 
-  
+  removeThought({ params }, res) {
+    //DELETE to remove a thought by its _id
+    Thought.findOneAndDelete({ _id: params.id })
+    .then(dbThoughtData => {
+        if (!dbThoughtData) {
+            res.status(404).json({ message: 'No thought found with that ID'});
+            return;
+        }
+        User.findOneAndUpdate(
+            { username: dbThoughtData.username },
+            { $pull: { thoughts: params.id } }
+        )
+        .then(() => {
+            res.json({message: 'Thought removed'});
+        })
+        .catch(err => res.status(500).json(err));
+    })
+    .catch(err => res.status(500).json(err));
+},
+
  
 }
   
