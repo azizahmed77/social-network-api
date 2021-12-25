@@ -95,6 +95,22 @@ const thoughtController = {
         .catch(err => res.status(500).json(err));
     })
     .catch(err => res.status(500).json(err));
+  },
+
+  postReaction({ params, body }, res) {
+    Thought.findOneAndUpdate(
+        { _id: params.thoughtId },
+        { $addToSet: { reactions: body } },
+        { new: true, runValidators: true }
+    )
+    .then(dbThoughtData => {
+        if (!dbThoughtData) {
+            res.status(404).json({ message: 'Thought not found' });
+            return;
+        }
+        res.json(dbThoughtData);
+    })
+    .catch(err => res.status(500).json(err));
 },
 
  
